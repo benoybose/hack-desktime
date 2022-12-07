@@ -176,59 +176,59 @@ namespace DeskTime
             }
         }
 
-        public static async Task UploadFileResponse(Uri uri, NameValueCollection postData, byte[] file, string fileName, string contentType, Action<Response> callback)
-        {
-            try
-            {
-                ServicePointManager.DnsRefreshTimeout = 0;
-                HttpClient httpClient = new HttpClient(new HttpClientHandler
-                {
-                    AutomaticDecompression = (DecompressionMethods.GZip | DecompressionMethods.Deflate)
-                });
-                httpClient.Timeout = TimeSpan.FromMilliseconds(timeout);
-                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("DeskTime Windows Client v" + MainWin.Version);
-                httpClient.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
-                httpClient.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("deflate"));
-                httpClient.DefaultRequestHeaders.ConnectionClose = true;
-                using MultipartFormDataContent multipartFormContent = new MultipartFormDataContent();
-                foreach (string postDatum in postData)
-                {
-                    _ = postData[postDatum];
-                    multipartFormContent.Add(new StringContent(postData[postDatum]), postDatum);
-                }
-                ByteArrayContent byteArrayContent = new ByteArrayContent(file);
-                byteArrayContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-                multipartFormContent.Add(byteArrayContent, "file", fileName);
-                using HttpResponseMessage httpResponseMessage = await httpClient.PostAsync(uri, multipartFormContent);
-                if (httpResponseMessage.IsSuccessStatusCode)
-                {
-                    if (callback != null)
-                    {
-                        DataContractJsonSerializer dataContractJsonSerializer = new DataContractJsonSerializer(typeof(Response));
-                        if (IsDebug())
-                        {
-                            string s = new StreamReader(httpResponseMessage.Content.ReadAsStreamAsync().Result, Encoding.UTF8).ReadToEnd();
-                            MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(s));
-                            callback(dataContractJsonSerializer.ReadObject((Stream)stream) as Response);
-                        }
-                        else
-                        {
-                            Stream result = httpResponseMessage.Content.ReadAsStreamAsync().Result;
-                            callback(dataContractJsonSerializer.ReadObject(result) as Response);
-                        }
-                    }
-                    return;
-                }
-                throw new Exception(httpResponseMessage.StatusCode.ToString());
-            }
-            catch (HttpRequestException ex)
-            {
-                throw new InvalidOperationException(ex.Message);
-            }
-            catch (Exception ex2)
-            {
-                Console.WriteLine(ex2.ToString());
-            }
-        }
+        //public static async Task UploadFileResponse(Uri uri, NameValueCollection postData, byte[] file, string fileName, string contentType, Action<Response> callback)
+        //{
+        //    try
+        //    {
+        //        ServicePointManager.DnsRefreshTimeout = 0;
+        //        HttpClient httpClient = new HttpClient(new HttpClientHandler
+        //        {
+        //            AutomaticDecompression = (DecompressionMethods.GZip | DecompressionMethods.Deflate)
+        //        });
+        //        httpClient.Timeout = TimeSpan.FromMilliseconds(timeout);
+        //        httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("DeskTime Windows Client v" + MainWin.Version);
+        //        httpClient.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
+        //        httpClient.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("deflate"));
+        //        httpClient.DefaultRequestHeaders.ConnectionClose = true;
+        //        using MultipartFormDataContent multipartFormContent = new MultipartFormDataContent();
+        //        foreach (string postDatum in postData)
+        //        {
+        //            _ = postData[postDatum];
+        //            multipartFormContent.Add(new StringContent(postData[postDatum]), postDatum);
+        //        }
+        //        ByteArrayContent byteArrayContent = new ByteArrayContent(file);
+        //        byteArrayContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        //        multipartFormContent.Add(byteArrayContent, "file", fileName);
+        //        using HttpResponseMessage httpResponseMessage = await httpClient.PostAsync(uri, multipartFormContent);
+        //        if (httpResponseMessage.IsSuccessStatusCode)
+        //        {
+        //            if (callback != null)
+        //            {
+        //                DataContractJsonSerializer dataContractJsonSerializer = new DataContractJsonSerializer(typeof(Response));
+        //                if (IsDebug())
+        //                {
+        //                    string s = new StreamReader(httpResponseMessage.Content.ReadAsStreamAsync().Result, Encoding.UTF8).ReadToEnd();
+        //                    MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(s));
+        //                    callback(dataContractJsonSerializer.ReadObject((Stream)stream) as Response);
+        //                }
+        //                else
+        //                {
+        //                    Stream result = httpResponseMessage.Content.ReadAsStreamAsync().Result;
+        //                    callback(dataContractJsonSerializer.ReadObject(result) as Response);
+        //                }
+        //            }
+        //            return;
+        //        }
+        //        throw new Exception(httpResponseMessage.StatusCode.ToString());
+        //    }
+        //    catch (HttpRequestException ex)
+        //    {
+        //        throw new InvalidOperationException(ex.Message);
+        //    }
+        //    catch (Exception ex2)
+        //    {
+        //        Console.WriteLine(ex2.ToString());
+        //    }
+        //}
     }
 }

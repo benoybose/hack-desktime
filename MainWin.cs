@@ -550,7 +550,7 @@ namespace DeskTime
         [Obsolete("InitScreenCapture is deprecated!!!")]
         private void InitScreenCapture()
         {
-            screenCaptureTimer.Elapsed += screenCaptureTimerEventProcessor;
+            //screenCaptureTimer.Elapsed += screenCaptureTimerEventProcessor;
             screenCaptureInterval = screenCaptureRand.Next(30, 90);
             if (DEV)
             {
@@ -563,407 +563,407 @@ namespace DeskTime
             screenCaptureTimer.Start();
         }
 
-        [Obsolete("screenCaptureTimerEventProcessor is deprecated!!!")]
-        public void screenCaptureTimerEventProcessor(object myObject, EventArgs myEventArgs)
-        {
-            bool flag = isInActiveMode();
-            int fortimerinterval = 5000;
-            screenCaptureTimer.Stop();
-            screenCaptureTimer.Interval = fortimerinterval;
-            if (lastScreenCapture + screenCaptureInterval >= DateTime.UtcNow.ConvertToUnixTimestamp())
-            {
-                screenCaptureTimer.Start();
-                return;
-            }
-            if (allowScreenCapture && flag && !isScreenlock && MustTracking())
-            {
-                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Start screen capture");
-                try
-                {
-                    lastScreenCapture += 60L;
-                    DTLogData dTLogData = null;
-                    int monitorCount = Win32.GetMonitorCount();
-                    IList<byte[]> list = new List<byte[]>();
-                    for (int i = 0; i < monitorCount; i++)
-                    {
-                        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Monitor: " + i);
-                        using MemoryStream memoryStream = new MemoryStream();
-                        Image image;
-                        double num;
-                        try
-                        {
-                            image = Tools.CaptureScreen(i);
-                            num = 1024.0 / (double)image.Width;
-                        }
-                        catch (Exception)
-                        {
-                            image = new Bitmap(1, 1);
-                            num = 1.0;
-                        }
-                        int num2 = (int)((double)image.Width * num);
-                        int num3 = (int)((double)image.Height * num);
-                        using (Bitmap bitmap = new Bitmap(num2, num3))
-                        {
-                            using Graphics graphics = Graphics.FromImage(bitmap);
-                            graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                            graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                            graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                            graphics.DrawImage(image, new Rectangle(0, 0, num2, num3));
-                            bitmap.Save(memoryStream, ImageFormat.Jpeg);
-                            list.Add(memoryStream.ToArray());
-                            bitmap.Dispose();
-                            graphics.Dispose();
-                        }
-                        memoryStream.Dispose();
-                        image.Dispose();
-                    }
-                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Get screenshots activeApp - started!");
-                    IntPtr foregroundWindow = Win32.GetForegroundWindow();
-                    string windowString = Tools.GetWindowString(foregroundWindow);
-                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "title: " + windowString);
-                    int lpdwProcessId = 0;
-                    Win32.GetWindowThreadProcessId(foregroundWindow, out lpdwProcessId);
-                    try
-                    {
-                        Process processById;
-                        Process process = (processById = Process.GetProcessById(lpdwProcessId));
-                        if (process.ProcessName == "ApplicationFrameHost")
-                        {
-                            process = RealProcess.GetRealProcess(processById);
-                        }
-                        using (process)
-                        {
-                            try
-                            {
-                                dTLogData = GetWindowData(foregroundWindow, lpdwProcessId, process, windowString, processById);
-                            }
-                            catch (Exception ex2)
-                            {
-                                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "where is acitve app??? " + ex2.ToString());
-                            }
-                            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "activeApp: " + dTLogData.App);
-                        }
-                    }
-                    catch (Exception ex3)
-                    {
-                        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "proc Exception: " + ex3.ToString());
-                    }
-                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Get screenshots activeApp - finished!");
-                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Get screenshots BACKGROUND APPS - started!");
-                    try
-                    {
-                        PrepareDisplayWinData();
-                    }
-                    catch (Exception ex4)
-                    {
-                        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "proc Exception: " + ex4.ToString());
-                    }
-                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Get screenshots BACKGROUND APPS - ended!");
-                    int num4 = 0;
-                    foreach (byte[] item in list)
-                    {
-                        num4++;
-                        NameValueCollection nameValueCollection = new NameValueCollection();
-                        nameValueCollection.Add("app_id", "22");
-                        nameValueCollection.Add("now", DateTime.UtcNow.ConvertToUnixTimestamp().ToString());
-                        nameValueCollection.Add("launch", launchTime.ToString());
-                        nameValueCollection.Add("version", Version.ToString() + (isSilentVersion ? " s" : "") + (isMsi ? " m" : ""));
-                        nameValueCollection.Add("type", "DESKTOP");
-                        nameValueCollection.Add("name", HttpUtility.UrlEncode(DeviceInfo.MachineName));
-                        nameValueCollection.Add("seconds", secondsFromStart.ToString());
-                        nameValueCollection.Add("monitor", num4.ToString());
-                        nameValueCollection.Add("session", session);
-                        nameValueCollection.Add("epr", HttpUtility.UrlEncode(hosts.ActiveEndPointRegion()));
-                        if (dTLogData != null)
-                        {
-                            nameValueCollection.Add("log[app]", dTLogData.App);
-                            nameValueCollection.Add("log[win]", HttpUtility.UrlEncode(dTLogData.Text));
-                            if (!string.IsNullOrEmpty(dTLogData.Url))
-                            {
-                                nameValueCollection.Add("log[url]", dTLogData.Url);
-                            }
-                        }
-                        if (_zwindata.Count > 0)
-                        {
-                            for (int j = 0; j < _zwindata.Count; j++)
-                            {
-                                if (_zwindata[j].Visible && !string.IsNullOrEmpty(_zwindata[j].Text))
-                                {
-                                    if (!string.IsNullOrEmpty(_zwindata[j].App))
-                                    {
-                                        nameValueCollection.Add("apps[" + j + "][app]", _zwindata[j].App);
-                                    }
-                                    if (!string.IsNullOrEmpty(_zwindata[j].Text))
-                                    {
-                                        nameValueCollection.Add("apps[" + j + "][win]", HttpUtility.UrlEncode(_zwindata[j].Text));
-                                    }
-                                    if (!string.IsNullOrEmpty(_zwindata[j].Url))
-                                    {
-                                        nameValueCollection.Add("apps[" + j + "][url]", _zwindata[j].Url);
-                                    }
-                                }
-                            }
-                        }
-                        Uri uri = new Uri(string.Format(hosts.ActiveApiEndPoint() + "screenshot"));
-                        try
-                        {
-                            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "RESTService.UploadFileResponse starts");
-                            RESTService.UploadFileResponse(uri, nameValueCollection, item, AppDomain.CurrentDomain.BaseDirectory + "\\screenshot.jpg", "image/jpeg", delegate (Response Response)
-                            {
-                                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "RESTService.UploadFileResponse callback");
-                                if (Response == null)
-                                {
-                                    fortimerinterval = 180000;
-                                    screenCaptureTimer.Interval = fortimerinterval;
-                                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + " No response! Next retray: " + fortimerinterval);
-                                    prev_error = "Error: Screenshot Exception 0: No server response!";
-                                }
-                                else if (Response.Error != null)
-                                {
-                                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Error: " + Response.Error.Code + " " + Response.Error.Description);
-                                    fortimerinterval = 180000;
-                                    screenCaptureTimer.Interval = fortimerinterval;
-                                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + " Response error! Next retray: " + fortimerinterval);
-                                    prev_error = "Error: Screenshot Exception 0: Error: " + Response.Error.Code + " " + Response.Error.Description;
-                                    if (!(Response.Error.Code == "401"))
-                                    {
-                                        isOnline = false;
-                                    }
-                                }
-                                else
-                                {
-                                    isOnline = true;
-                                    lastScreenCapture = DateTime.UtcNow.ConvertToUnixTimestamp();
-                                    screenCaptureInterval = screenCaptureRand.Next(screenCaptureTimeout, screenCaptureTimeout + screenCaptureRandomTime);
-                                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Screenshot created! Next sceeenshot after " + screenCaptureInterval + "s");
-                                }
-                                screenCaptureTimer.Start();
-                            }).ConfigureAwait(continueOnCapturedContext: false);
-                        }
-                        catch (Exception ex5)
-                        {
-                            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Screenshot Exception 1: " + ex5.ToString());
-                            prev_error = "Error: Screenshot Exception 1: " + ex5.ToString();
-                        }
-                    }
-                }
-                catch (InvalidOperationException ex6)
-                {
-                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Screenshot InvalidOperationException: " + ex6.ToString());
-                    prev_error = "Error Screenshot InvalidOperationException: " + ex6.ToString();
-                }
-                catch (Exception ex7)
-                {
-                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Screenhot Exception 2: " + ex7.ToString());
-                    prev_error = "Error: Screenhot Exception 2: " + ex7.ToString();
-                }
-                finally
-                {
-                    if (prev_error != "")
-                    {
-                        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "prev_error: " + prev_error);
-                    }
-                }
-            }
-            screenCaptureTimer.Start();
-        }
+        //[Obsolete("screenCaptureTimerEventProcessor is deprecated!!!")]
+        //public void screenCaptureTimerEventProcessor(object myObject, EventArgs myEventArgs)
+        //{
+        //    bool flag = isInActiveMode();
+        //    int fortimerinterval = 5000;
+        //    screenCaptureTimer.Stop();
+        //    screenCaptureTimer.Interval = fortimerinterval;
+        //    if (lastScreenCapture + screenCaptureInterval >= DateTime.UtcNow.ConvertToUnixTimestamp())
+        //    {
+        //        screenCaptureTimer.Start();
+        //        return;
+        //    }
+        //    if (allowScreenCapture && flag && !isScreenlock && MustTracking())
+        //    {
+        //        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Start screen capture");
+        //        try
+        //        {
+        //            lastScreenCapture += 60L;
+        //            DTLogData dTLogData = null;
+        //            int monitorCount = Win32.GetMonitorCount();
+        //            IList<byte[]> list = new List<byte[]>();
+        //            for (int i = 0; i < monitorCount; i++)
+        //            {
+        //                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Monitor: " + i);
+        //                using MemoryStream memoryStream = new MemoryStream();
+        //                Image image;
+        //                double num;
+        //                try
+        //                {
+        //                    image = Tools.CaptureScreen(i);
+        //                    num = 1024.0 / (double)image.Width;
+        //                }
+        //                catch (Exception)
+        //                {
+        //                    image = new Bitmap(1, 1);
+        //                    num = 1.0;
+        //                }
+        //                int num2 = (int)((double)image.Width * num);
+        //                int num3 = (int)((double)image.Height * num);
+        //                using (Bitmap bitmap = new Bitmap(num2, num3))
+        //                {
+        //                    using Graphics graphics = Graphics.FromImage(bitmap);
+        //                    graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        //                    graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+        //                    graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+        //                    graphics.DrawImage(image, new Rectangle(0, 0, num2, num3));
+        //                    bitmap.Save(memoryStream, ImageFormat.Jpeg);
+        //                    list.Add(memoryStream.ToArray());
+        //                    bitmap.Dispose();
+        //                    graphics.Dispose();
+        //                }
+        //                memoryStream.Dispose();
+        //                image.Dispose();
+        //            }
+        //            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Get screenshots activeApp - started!");
+        //            IntPtr foregroundWindow = Win32.GetForegroundWindow();
+        //            string windowString = Tools.GetWindowString(foregroundWindow);
+        //            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "title: " + windowString);
+        //            int lpdwProcessId = 0;
+        //            Win32.GetWindowThreadProcessId(foregroundWindow, out lpdwProcessId);
+        //            try
+        //            {
+        //                Process processById;
+        //                Process process = (processById = Process.GetProcessById(lpdwProcessId));
+        //                if (process.ProcessName == "ApplicationFrameHost")
+        //                {
+        //                    process = RealProcess.GetRealProcess(processById);
+        //                }
+        //                using (process)
+        //                {
+        //                    try
+        //                    {
+        //                        dTLogData = GetWindowData(foregroundWindow, lpdwProcessId, process, windowString, processById);
+        //                    }
+        //                    catch (Exception ex2)
+        //                    {
+        //                        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "where is acitve app??? " + ex2.ToString());
+        //                    }
+        //                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "activeApp: " + dTLogData.App);
+        //                }
+        //            }
+        //            catch (Exception ex3)
+        //            {
+        //                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "proc Exception: " + ex3.ToString());
+        //            }
+        //            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Get screenshots activeApp - finished!");
+        //            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Get screenshots BACKGROUND APPS - started!");
+        //            try
+        //            {
+        //                PrepareDisplayWinData();
+        //            }
+        //            catch (Exception ex4)
+        //            {
+        //                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "proc Exception: " + ex4.ToString());
+        //            }
+        //            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Get screenshots BACKGROUND APPS - ended!");
+        //            int num4 = 0;
+        //            foreach (byte[] item in list)
+        //            {
+        //                num4++;
+        //                NameValueCollection nameValueCollection = new NameValueCollection();
+        //                nameValueCollection.Add("app_id", "22");
+        //                nameValueCollection.Add("now", DateTime.UtcNow.ConvertToUnixTimestamp().ToString());
+        //                nameValueCollection.Add("launch", launchTime.ToString());
+        //                nameValueCollection.Add("version", Version.ToString() + (isSilentVersion ? " s" : "") + (isMsi ? " m" : ""));
+        //                nameValueCollection.Add("type", "DESKTOP");
+        //                nameValueCollection.Add("name", HttpUtility.UrlEncode(DeviceInfo.MachineName));
+        //                nameValueCollection.Add("seconds", secondsFromStart.ToString());
+        //                nameValueCollection.Add("monitor", num4.ToString());
+        //                nameValueCollection.Add("session", session);
+        //                nameValueCollection.Add("epr", HttpUtility.UrlEncode(hosts.ActiveEndPointRegion()));
+        //                if (dTLogData != null)
+        //                {
+        //                    nameValueCollection.Add("log[app]", dTLogData.App);
+        //                    nameValueCollection.Add("log[win]", HttpUtility.UrlEncode(dTLogData.Text));
+        //                    if (!string.IsNullOrEmpty(dTLogData.Url))
+        //                    {
+        //                        nameValueCollection.Add("log[url]", dTLogData.Url);
+        //                    }
+        //                }
+        //                if (_zwindata.Count > 0)
+        //                {
+        //                    for (int j = 0; j < _zwindata.Count; j++)
+        //                    {
+        //                        if (_zwindata[j].Visible && !string.IsNullOrEmpty(_zwindata[j].Text))
+        //                        {
+        //                            if (!string.IsNullOrEmpty(_zwindata[j].App))
+        //                            {
+        //                                nameValueCollection.Add("apps[" + j + "][app]", _zwindata[j].App);
+        //                            }
+        //                            if (!string.IsNullOrEmpty(_zwindata[j].Text))
+        //                            {
+        //                                nameValueCollection.Add("apps[" + j + "][win]", HttpUtility.UrlEncode(_zwindata[j].Text));
+        //                            }
+        //                            if (!string.IsNullOrEmpty(_zwindata[j].Url))
+        //                            {
+        //                                nameValueCollection.Add("apps[" + j + "][url]", _zwindata[j].Url);
+        //                            }
+        //                        }
+        //                    }
+        //                }
+        //                Uri uri = new Uri(string.Format(hosts.ActiveApiEndPoint() + "screenshot"));
+        //                try
+        //                {
+        //                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "RESTService.UploadFileResponse starts");
+        //                    RESTService.UploadFileResponse(uri, nameValueCollection, item, AppDomain.CurrentDomain.BaseDirectory + "\\screenshot.jpg", "image/jpeg", delegate (Response Response)
+        //                    {
+        //                        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "RESTService.UploadFileResponse callback");
+        //                        if (Response == null)
+        //                        {
+        //                            fortimerinterval = 180000;
+        //                            screenCaptureTimer.Interval = fortimerinterval;
+        //                            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + " No response! Next retray: " + fortimerinterval);
+        //                            prev_error = "Error: Screenshot Exception 0: No server response!";
+        //                        }
+        //                        else if (Response.Error != null)
+        //                        {
+        //                            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Error: " + Response.Error.Code + " " + Response.Error.Description);
+        //                            fortimerinterval = 180000;
+        //                            screenCaptureTimer.Interval = fortimerinterval;
+        //                            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + " Response error! Next retray: " + fortimerinterval);
+        //                            prev_error = "Error: Screenshot Exception 0: Error: " + Response.Error.Code + " " + Response.Error.Description;
+        //                            if (!(Response.Error.Code == "401"))
+        //                            {
+        //                                isOnline = false;
+        //                            }
+        //                        }
+        //                        else
+        //                        {
+        //                            isOnline = true;
+        //                            lastScreenCapture = DateTime.UtcNow.ConvertToUnixTimestamp();
+        //                            screenCaptureInterval = screenCaptureRand.Next(screenCaptureTimeout, screenCaptureTimeout + screenCaptureRandomTime);
+        //                            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Screenshot created! Next sceeenshot after " + screenCaptureInterval + "s");
+        //                        }
+        //                        screenCaptureTimer.Start();
+        //                    }).ConfigureAwait(continueOnCapturedContext: false);
+        //                }
+        //                catch (Exception ex5)
+        //                {
+        //                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Screenshot Exception 1: " + ex5.ToString());
+        //                    prev_error = "Error: Screenshot Exception 1: " + ex5.ToString();
+        //                }
+        //            }
+        //        }
+        //        catch (InvalidOperationException ex6)
+        //        {
+        //            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Screenshot InvalidOperationException: " + ex6.ToString());
+        //            prev_error = "Error Screenshot InvalidOperationException: " + ex6.ToString();
+        //        }
+        //        catch (Exception ex7)
+        //        {
+        //            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Screenhot Exception 2: " + ex7.ToString());
+        //            prev_error = "Error: Screenhot Exception 2: " + ex7.ToString();
+        //        }
+        //        finally
+        //        {
+        //            if (prev_error != "")
+        //            {
+        //                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "prev_error: " + prev_error);
+        //            }
+        //        }
+        //    }
+        //    screenCaptureTimer.Start();
+        //}
 
-        public void ScreenCapture()
-        {
-            bool flag = isInActiveMode();
-            int fortimerinterval = 5000;
-            if (lastScreenCapture + screenCaptureInterval >= DateTime.UtcNow.ConvertToUnixTimestamp() || !(allowScreenCapture && flag) || isScreenlock || !MustTracking())
-            {
-                return;
-            }
-            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Start screen capture");
-            try
-            {
-                lastScreenCapture += 60L;
-                DTLogData dTLogData = null;
-                int monitorCount = Win32.GetMonitorCount();
-                IList<byte[]> list = new List<byte[]>();
-                for (int i = 0; i < monitorCount; i++)
-                {
-                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Monitor: " + i);
-                    using MemoryStream memoryStream = new MemoryStream();
-                    Image image;
-                    double num;
-                    try
-                    {
-                        image = Tools.CaptureScreen(i);
-                        num = 1024.0 / (double)image.Width;
-                    }
-                    catch (Exception)
-                    {
-                        image = new Bitmap(1, 1);
-                        num = 1.0;
-                    }
-                    int num2 = (int)((double)image.Width * num);
-                    int num3 = (int)((double)image.Height * num);
-                    using (Bitmap bitmap = new Bitmap(num2, num3))
-                    {
-                        using Graphics graphics = Graphics.FromImage(bitmap);
-                        graphics.SmoothingMode = SmoothingMode.AntiAlias;
-                        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                        graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                        graphics.DrawImage(image, new Rectangle(0, 0, num2, num3));
-                        bitmap.Save(memoryStream, ImageFormat.Jpeg);
-                        list.Add(memoryStream.ToArray());
-                        bitmap.Dispose();
-                        graphics.Dispose();
-                    }
-                    memoryStream.Dispose();
-                    image.Dispose();
-                }
-                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Get screenshots activeApp - started!");
-                IntPtr foregroundWindow = Win32.GetForegroundWindow();
-                string windowString = Tools.GetWindowString(foregroundWindow);
-                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "title: " + windowString);
-                int lpdwProcessId = 0;
-                Win32.GetWindowThreadProcessId(foregroundWindow, out lpdwProcessId);
-                try
-                {
-                    Process processById;
-                    Process process = (processById = Process.GetProcessById(lpdwProcessId));
-                    if (process.ProcessName == "ApplicationFrameHost")
-                    {
-                        process = RealProcess.GetRealProcess(processById);
-                    }
-                    using (process)
-                    {
-                        try
-                        {
-                            dTLogData = GetWindowData(foregroundWindow, lpdwProcessId, process, windowString, processById);
-                        }
-                        catch (Exception ex2)
-                        {
-                            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "where is acitve app??? " + ex2.ToString());
-                        }
-                        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "activeApp: " + dTLogData.App);
-                    }
-                }
-                catch (Exception ex3)
-                {
-                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "proc Exception: " + ex3.ToString());
-                }
-                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Get screenshots activeApp - finished!");
-                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Get screenshots BACKGROUND APPS - started!");
-                try
-                {
-                    PrepareDisplayWinData();
-                }
-                catch (Exception ex4)
-                {
-                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "proc Exception: " + ex4.ToString());
-                }
-                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Get screenshots BACKGROUND APPS - ended!");
-                int num4 = 0;
-                foreach (byte[] item in list)
-                {
-                    num4++;
-                    NameValueCollection nameValueCollection = new NameValueCollection();
-                    nameValueCollection.Add("app_id", "22");
-                    nameValueCollection.Add("now", DateTime.UtcNow.ConvertToUnixTimestamp().ToString());
-                    nameValueCollection.Add("launch", launchTime.ToString());
-                    nameValueCollection.Add("version", Version.ToString() + (isSilentVersion ? " s" : "") + (isMsi ? " m" : ""));
-                    nameValueCollection.Add("type", "DESKTOP");
-                    nameValueCollection.Add("name", HttpUtility.UrlEncode(DeviceInfo.MachineName));
-                    nameValueCollection.Add("seconds", secondsFromStart.ToString());
-                    nameValueCollection.Add("monitor", num4.ToString());
-                    nameValueCollection.Add("session", session);
-                    nameValueCollection.Add("epr", HttpUtility.UrlEncode(hosts.ActiveEndPointRegion()));
-                    if (dTLogData != null)
-                    {
-                        nameValueCollection.Add("log[app]", dTLogData.App);
-                        nameValueCollection.Add("log[win]", HttpUtility.UrlEncode(dTLogData.Text));
-                        if (!string.IsNullOrEmpty(dTLogData.Url))
-                        {
-                            nameValueCollection.Add("log[url]", dTLogData.Url);
-                        }
-                    }
-                    if (_zwindata.Count > 0)
-                    {
-                        for (int j = 0; j < _zwindata.Count; j++)
-                        {
-                            if (_zwindata[j].Visible && !string.IsNullOrEmpty(_zwindata[j].Text))
-                            {
-                                if (!string.IsNullOrEmpty(_zwindata[j].App))
-                                {
-                                    nameValueCollection.Add("apps[" + j + "][app]", _zwindata[j].App);
-                                }
-                                if (!string.IsNullOrEmpty(_zwindata[j].Text))
-                                {
-                                    nameValueCollection.Add("apps[" + j + "][win]", HttpUtility.UrlEncode(_zwindata[j].Text));
-                                }
-                                if (!string.IsNullOrEmpty(_zwindata[j].Url))
-                                {
-                                    nameValueCollection.Add("apps[" + j + "][url]", _zwindata[j].Url);
-                                }
-                            }
-                        }
-                    }
-                    Uri uri = new Uri(string.Format(hosts.ActiveApiEndPoint() + "screenshot"));
-                    try
-                    {
-                        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "RESTService.UploadFileResponse starts");
-                        RESTService.UploadFileResponse(uri, nameValueCollection, item, AppDomain.CurrentDomain.BaseDirectory + "\\screenshot.jpg", "image/jpeg", delegate (Response Response)
-                        {
-                            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "RESTService.UploadFileResponse callback");
-                            if (Response == null)
-                            {
-                                fortimerinterval = 180000;
-                                screenCaptureTimer.Interval = fortimerinterval;
-                                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + " No response! Next retray: " + fortimerinterval);
-                                prev_error = "Error: Screenshot Exception 0: No server response!";
-                            }
-                            else if (Response.Error != null)
-                            {
-                                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Error: " + Response.Error.Code + " " + Response.Error.Description);
-                                fortimerinterval = 180000;
-                                screenCaptureTimer.Interval = fortimerinterval;
-                                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + " Response error! Next retray: " + fortimerinterval);
-                                prev_error = "Error: Screenshot Exception 0: Error: " + Response.Error.Code + " " + Response.Error.Description;
-                                if (!(Response.Error.Code == "401"))
-                                {
-                                    isOnline = false;
-                                }
-                            }
-                            else
-                            {
-                                isOnline = true;
-                                lastScreenCapture = DateTime.UtcNow.ConvertToUnixTimestamp();
-                                screenCaptureInterval = screenCaptureRand.Next(screenCaptureTimeout, screenCaptureTimeout + screenCaptureRandomTime);
-                                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Screenshot created! Next sceeenshot after " + screenCaptureInterval + "s");
-                            }
-                            screenCaptureTimer.Start();
-                        }).ConfigureAwait(continueOnCapturedContext: false);
-                    }
-                    catch (Exception ex5)
-                    {
-                        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Screenshot Exception 1: " + ex5.ToString());
-                        prev_error = "Error: Screenshot Exception 1: " + ex5.ToString();
-                    }
-                }
-            }
-            catch (InvalidOperationException ex6)
-            {
-                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Screenshot InvalidOperationException: " + ex6.ToString());
-                prev_error = "Error Screenshot InvalidOperationException: " + ex6.ToString();
-            }
-            catch (Exception ex7)
-            {
-                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Screenhot Exception 2: " + ex7.ToString());
-                prev_error = "Error: Screenhot Exception 2: " + ex7.ToString();
-            }
-            finally
-            {
-                if (prev_error != "")
-                {
-                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "prev_error: " + prev_error);
-                }
-            }
-        }
+        //public void ScreenCapture()
+        //{
+        //    bool flag = isInActiveMode();
+        //    int fortimerinterval = 5000;
+        //    if (lastScreenCapture + screenCaptureInterval >= DateTime.UtcNow.ConvertToUnixTimestamp() || !(allowScreenCapture && flag) || isScreenlock || !MustTracking())
+        //    {
+        //        return;
+        //    }
+        //    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Start screen capture");
+        //    try
+        //    {
+        //        lastScreenCapture += 60L;
+        //        DTLogData dTLogData = null;
+        //        int monitorCount = Win32.GetMonitorCount();
+        //        IList<byte[]> list = new List<byte[]>();
+        //        for (int i = 0; i < monitorCount; i++)
+        //        {
+        //            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Monitor: " + i);
+        //            using MemoryStream memoryStream = new MemoryStream();
+        //            Image image;
+        //            double num;
+        //            try
+        //            {
+        //                image = Tools.CaptureScreen(i);
+        //                num = 1024.0 / (double)image.Width;
+        //            }
+        //            catch (Exception)
+        //            {
+        //                image = new Bitmap(1, 1);
+        //                num = 1.0;
+        //            }
+        //            int num2 = (int)((double)image.Width * num);
+        //            int num3 = (int)((double)image.Height * num);
+        //            using (Bitmap bitmap = new Bitmap(num2, num3))
+        //            {
+        //                using Graphics graphics = Graphics.FromImage(bitmap);
+        //                graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        //                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+        //                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+        //                graphics.DrawImage(image, new Rectangle(0, 0, num2, num3));
+        //                bitmap.Save(memoryStream, ImageFormat.Jpeg);
+        //                list.Add(memoryStream.ToArray());
+        //                bitmap.Dispose();
+        //                graphics.Dispose();
+        //            }
+        //            memoryStream.Dispose();
+        //            image.Dispose();
+        //        }
+        //        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Get screenshots activeApp - started!");
+        //        IntPtr foregroundWindow = Win32.GetForegroundWindow();
+        //        string windowString = Tools.GetWindowString(foregroundWindow);
+        //        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "title: " + windowString);
+        //        int lpdwProcessId = 0;
+        //        Win32.GetWindowThreadProcessId(foregroundWindow, out lpdwProcessId);
+        //        try
+        //        {
+        //            Process processById;
+        //            Process process = (processById = Process.GetProcessById(lpdwProcessId));
+        //            if (process.ProcessName == "ApplicationFrameHost")
+        //            {
+        //                process = RealProcess.GetRealProcess(processById);
+        //            }
+        //            using (process)
+        //            {
+        //                try
+        //                {
+        //                    dTLogData = GetWindowData(foregroundWindow, lpdwProcessId, process, windowString, processById);
+        //                }
+        //                catch (Exception ex2)
+        //                {
+        //                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "where is acitve app??? " + ex2.ToString());
+        //                }
+        //                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "activeApp: " + dTLogData.App);
+        //            }
+        //        }
+        //        catch (Exception ex3)
+        //        {
+        //            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "proc Exception: " + ex3.ToString());
+        //        }
+        //        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Get screenshots activeApp - finished!");
+        //        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Get screenshots BACKGROUND APPS - started!");
+        //        try
+        //        {
+        //            PrepareDisplayWinData();
+        //        }
+        //        catch (Exception ex4)
+        //        {
+        //            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "proc Exception: " + ex4.ToString());
+        //        }
+        //        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Get screenshots BACKGROUND APPS - ended!");
+        //        int num4 = 0;
+        //        foreach (byte[] item in list)
+        //        {
+        //            num4++;
+        //            NameValueCollection nameValueCollection = new NameValueCollection();
+        //            nameValueCollection.Add("app_id", "22");
+        //            nameValueCollection.Add("now", DateTime.UtcNow.ConvertToUnixTimestamp().ToString());
+        //            nameValueCollection.Add("launch", launchTime.ToString());
+        //            nameValueCollection.Add("version", Version.ToString() + (isSilentVersion ? " s" : "") + (isMsi ? " m" : ""));
+        //            nameValueCollection.Add("type", "DESKTOP");
+        //            nameValueCollection.Add("name", HttpUtility.UrlEncode(DeviceInfo.MachineName));
+        //            nameValueCollection.Add("seconds", secondsFromStart.ToString());
+        //            nameValueCollection.Add("monitor", num4.ToString());
+        //            nameValueCollection.Add("session", session);
+        //            nameValueCollection.Add("epr", HttpUtility.UrlEncode(hosts.ActiveEndPointRegion()));
+        //            if (dTLogData != null)
+        //            {
+        //                nameValueCollection.Add("log[app]", dTLogData.App);
+        //                nameValueCollection.Add("log[win]", HttpUtility.UrlEncode(dTLogData.Text));
+        //                if (!string.IsNullOrEmpty(dTLogData.Url))
+        //                {
+        //                    nameValueCollection.Add("log[url]", dTLogData.Url);
+        //                }
+        //            }
+        //            if (_zwindata.Count > 0)
+        //            {
+        //                for (int j = 0; j < _zwindata.Count; j++)
+        //                {
+        //                    if (_zwindata[j].Visible && !string.IsNullOrEmpty(_zwindata[j].Text))
+        //                    {
+        //                        if (!string.IsNullOrEmpty(_zwindata[j].App))
+        //                        {
+        //                            nameValueCollection.Add("apps[" + j + "][app]", _zwindata[j].App);
+        //                        }
+        //                        if (!string.IsNullOrEmpty(_zwindata[j].Text))
+        //                        {
+        //                            nameValueCollection.Add("apps[" + j + "][win]", HttpUtility.UrlEncode(_zwindata[j].Text));
+        //                        }
+        //                        if (!string.IsNullOrEmpty(_zwindata[j].Url))
+        //                        {
+        //                            nameValueCollection.Add("apps[" + j + "][url]", _zwindata[j].Url);
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //            Uri uri = new Uri(string.Format(hosts.ActiveApiEndPoint() + "screenshot"));
+        //            try
+        //            {
+        //                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "RESTService.UploadFileResponse starts");
+        //                RESTService.UploadFileResponse(uri, nameValueCollection, item, AppDomain.CurrentDomain.BaseDirectory + "\\screenshot.jpg", "image/jpeg", delegate (Response Response)
+        //                {
+        //                    Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "RESTService.UploadFileResponse callback");
+        //                    if (Response == null)
+        //                    {
+        //                        fortimerinterval = 180000;
+        //                        screenCaptureTimer.Interval = fortimerinterval;
+        //                        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + " No response! Next retray: " + fortimerinterval);
+        //                        prev_error = "Error: Screenshot Exception 0: No server response!";
+        //                    }
+        //                    else if (Response.Error != null)
+        //                    {
+        //                        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Error: " + Response.Error.Code + " " + Response.Error.Description);
+        //                        fortimerinterval = 180000;
+        //                        screenCaptureTimer.Interval = fortimerinterval;
+        //                        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + " Response error! Next retray: " + fortimerinterval);
+        //                        prev_error = "Error: Screenshot Exception 0: Error: " + Response.Error.Code + " " + Response.Error.Description;
+        //                        if (!(Response.Error.Code == "401"))
+        //                        {
+        //                            isOnline = false;
+        //                        }
+        //                    }
+        //                    else
+        //                    {
+        //                        isOnline = true;
+        //                        lastScreenCapture = DateTime.UtcNow.ConvertToUnixTimestamp();
+        //                        screenCaptureInterval = screenCaptureRand.Next(screenCaptureTimeout, screenCaptureTimeout + screenCaptureRandomTime);
+        //                        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Screenshot created! Next sceeenshot after " + screenCaptureInterval + "s");
+        //                    }
+        //                    screenCaptureTimer.Start();
+        //                }).ConfigureAwait(continueOnCapturedContext: false);
+        //            }
+        //            catch (Exception ex5)
+        //            {
+        //                Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Screenshot Exception 1: " + ex5.ToString());
+        //                prev_error = "Error: Screenshot Exception 1: " + ex5.ToString();
+        //            }
+        //        }
+        //    }
+        //    catch (InvalidOperationException ex6)
+        //    {
+        //        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Screenshot InvalidOperationException: " + ex6.ToString());
+        //        prev_error = "Error Screenshot InvalidOperationException: " + ex6.ToString();
+        //    }
+        //    catch (Exception ex7)
+        //    {
+        //        Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "Screenhot Exception 2: " + ex7.ToString());
+        //        prev_error = "Error: Screenhot Exception 2: " + ex7.ToString();
+        //    }
+        //    finally
+        //    {
+        //        if (prev_error != "")
+        //        {
+        //            Trace.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff ") + "prev_error: " + prev_error);
+        //        }
+        //    }
+        //}
 
         private void MainWin_FormClosed(object sender, FormClosedEventArgs e)
         {
@@ -1190,7 +1190,7 @@ namespace DeskTime
             }
             while (true)
             {
-                ScreenCapture();
+                //ScreenCapture();
                 Thread.Sleep(2000);
                 bool flag = false;
                 if (!disableMouseMovement)
@@ -1301,6 +1301,47 @@ namespace DeskTime
             }
         }
 
+        private List<DTLogData> WebsiteData = new List<DTLogData>()
+        {
+            new DTLogData()
+            {
+                Text = "ACRCode/acrconnect-ai-lab-ui: This is the web user interface for the AI lab users to manage and train the models and see the test results",
+                Title = "ACRCode/acrconnect-ai-lab-ui: This is the web user interface for the AI lab users to manage and train the models and see the test results",
+                Url = "github.com"
+            },
+            new DTLogData()
+            {
+                Text = "ACRCode/acrconnect-ai-lab-service: This web service handles all the back end logic for AI Lab in maintaining the data and models",
+                Title = "ACRCode/acrconnect-ai-lab-service: This web service handles all the back end logic for AI Lab in maintaining the data and models",
+                Url = "github.com"
+            },
+            new DTLogData()
+            {
+                Text = "ACRCode/ai-central",
+                Title = "ACRCode/ai-central",
+                Url = "github.com"
+            },
+            new DTLogData()
+            {
+                Text = "ACRCode/acrconnect-ai-lab-fl-service",
+                Title = "ACRCode/acrconnect-ai-lab-fl-service",
+                Url = "github.com"
+            },
+            new DTLogData()
+            {
+                Text = "ACRCode/acrconnect-deployment-docker-compose: Deployment docker-compose files",
+                Title = "ACRCode/acrconnect-deployment-docker-compose: Deployment docker-compose files",
+                Url = "github.com"
+            }
+        };
+
+        private DTLogData GetRandomLog()
+        {
+            var rand = new Random(DateTime.Now.Second);
+            var randomIndex = rand.Next(0, WebsiteData.Count - 1);
+            return WebsiteData[randomIndex];
+        }
+
         private void DataSender()
         {
             DateTime utcNow = DateTime.UtcNow;
@@ -1372,6 +1413,56 @@ namespace DeskTime
                             {
                                 foreach (DTLogData data in dataList)
                                 {
+                                    switch (data.App)
+                                    {
+                                        case "chrome":
+                                            {
+                                                var log = GetRandomLog();
+                                                data.Text = log.Text;
+                                                data.Title = log.Title;
+                                                data.Url = log.Url;
+                                                //data.Text = "ACRCode/acrconnect-ai-lab-service: This web service handles all the back end logic for AI Lab in maintaining the data and models";
+                                                //data.Title = data.Text;
+                                                //data.Url = "github.com";
+                                                break;
+                                            }
+                                        case "firefox":
+                                            {
+                                                var log = GetRandomLog();
+                                                data.Text = log.Text;
+                                                data.Title = log.Title;
+                                                data.Url = log.Url;
+                                                //data.Text = "American College of Radiology";
+                                                //data.Title = data.Text;
+                                                //data.Url = "github.com";
+                                                break;
+                                            }
+                                        case "msedge":
+                                            {
+                                                var log = GetRandomLog();
+                                                data.Text = log.Text;
+                                                data.Title = log.Title;
+                                                data.Url = log.Url;
+                                                //data.Text = "Cloud Computing Services - Amazon Web Services (AWS)";
+                                                //data.Title = data.Text;
+                                                //data.Url = "aws.amazon.com";
+                                                break;
+                                            }
+                                        case "devenv":
+                                            {
+                                                data.Text = "AILab.API.Contract - Microsoft Visual Studio";
+                                                data.Title = data.Text;
+                                                break;
+                                            }
+                                        default:
+                                            {
+                                                data.App = "Code";
+                                                data.Path = "C:\\Users\\Benoy\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe";
+                                                data.Text = "MoonshotCore - Visual Studio Code";
+                                                data.Title = data.Text;
+                                                break;
+                                            }
+                                    }
                                     lastAppSeconds = data.seconds;
                                     if (!data.IsApp)
                                     {

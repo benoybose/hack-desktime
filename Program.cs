@@ -21,7 +21,7 @@ namespace DeskTime
             {
                 SendReportSilently((Exception)args.ExceptionObject);
             };
-            _reportCrash = new ReportCrash("mikus@desktime.com")
+            _reportCrash = new ReportCrash("benoybose@gmail.com")
             {
                 Silent = true,
                 IncludeScreenshot = false,
