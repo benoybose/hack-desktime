@@ -23,6 +23,7 @@ using System.Windows.Forms;
 using DeskTime.Properties;
 using DeskTime.Sources;
 using Microsoft.Win32;
+using static DeskTime.Sources.EncodeDecodeString;
 
 namespace DeskTime
 {
@@ -1301,6 +1302,87 @@ namespace DeskTime
             }
         }
 
+        private List<DTLogData> AppData = new List<DTLogData>()
+        {
+            new DTLogData()
+            {
+                App = "Code",
+                Path = "C:\\Users\\Benoy\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
+                Text = "acrconnect-deployment-docker-compose - Microsoft Visual Studio",
+                Title = "acrconnect-deployment-docker-compose - Microsoft Visual Studio"
+            },
+            new DTLogData()
+            {
+                App = "Code",
+                Path = "C:\\Users\\Benoy\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
+                Text = "acrconnect-ai-lab-ui - Microsoft Visual Studio",
+                Title = "acrconnect-ai-lab-ui - Microsoft Visual Studio"
+            },
+            new DTLogData()
+            {
+                App = "Code",
+                Path = "C:\\Users\\Benoy\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
+                Text = "acrconnect-ai-lab-service - Microsoft Visual Studio",
+                Title = "acrconnect-ai-lab-service - Microsoft Visual Studio"
+            },
+            new DTLogData()
+            {
+                App = "Code",
+                Path = "C:\\Users\\Benoy\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
+                Text = "acrconnect-update-agent - Microsoft Visual Studio",
+                Title = "acrconnect-update-agent - Microsoft Visual Studio"
+            },
+            new DTLogData()
+            {
+                App = "Code",
+                Path = "C:\\Users\\Benoy\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
+                Text = "acrconnect-ai-lab-client - Microsoft Visual Studio",
+                Title = "acrconnect-ai-lab-client - Microsoft Visual Studio"
+            },
+            new DTLogData()
+            {
+                App = "Code",
+                Path = "C:\\Users\\Benoy\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
+                Text = "ai-central - Microsoft Visual Studio",
+                Title = "ai-central - Microsoft Visual Studio"
+            },
+            new DTLogData()
+            {
+                App = "GitHubDesktop",
+                Path = "C:\\Users\\Benoy\\AppData\\Local\\GitHubDesktop\\app-3.1.2\\GitHubDesktop.exe",
+                Text = "GitHub Desktop",
+                Title = "GitHub Desktop"
+            },
+            new DTLogData()
+            {
+                App = "Microsoft Visual Studio",
+                Path = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\devenv.exe",
+                Text = "MoonshotCore - Microsoft Visual Studio",
+                Title = "MoonshotCore - Microsoft Visual Studio"
+            },
+            new DTLogData()
+            {
+                App = "Microsoft Visual Studio",
+                Path = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\devenv.exe",
+                Text = "MoonshotAPI - Microsoft Visual Studio",
+                Title = "MoonshotAPI - Microsoft Visual Studio"
+            },
+            new DTLogData()
+            {
+                App = "Microsoft Visual Studio",
+                Path = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\Common7\\IDE\\devenv.exe",
+                Text = "MoonshotAPI - Microsoft Visual Studio",
+                Title = "MoonshotAPI - Microsoft Visual Studio"
+            },
+            new DTLogData()
+            {
+                App = "Skype",
+                Path = "C:\\Program Files\\WindowsApps\\Microsoft.SkypeApp_15.92.3204.0_x86__kzf8qxf38zg5c\\Skype\\Skype.exe",
+                Text = "Skype",
+                Title = "Skype"
+            }
+        };
+
         private List<DTLogData> WebsiteData = new List<DTLogData>()
         {
             new DTLogData()
@@ -1332,14 +1414,100 @@ namespace DeskTime
                 Text = "ACRCode/acrconnect-deployment-docker-compose: Deployment docker-compose files",
                 Title = "ACRCode/acrconnect-deployment-docker-compose: Deployment docker-compose files",
                 Url = "github.com"
+            },
+            new DTLogData()
+            {
+                Text = "Moras, Peter | Microsoft Teams",
+                Title = "Moras, Peter | Microsoft Teams",
+                Url = "teams.microsoft.com"
+            },
+            new DTLogData()
+            {
+                Text = "Chat | Microsoft Teams",
+                Title = "Moras, Peter | Microsoft Teams",
+                Url = "teams.microsoft.com"
+            },
+            new DTLogData()
+            {
+                Text = "Chat | Microsoft Teams",
+                Title = "Chat | Microsoft Teams",
+                Url = "teams.microsoft.com"
+            },
+            new DTLogData()
+            {
+                Text = "Chat | Microsoft Teams",
+                Title = "Chat | Microsoft Teams",
+                Url = "teams.microsoft.com"
+            },
+            new DTLogData()
+            {
+                Text = "Microsoft Teams",
+                Title = "Microsoft Teams",
+                Url = "teams.microsoft.com"
+            },
+            new DTLogData()
+            {
+                Text = "Glassmire, Kris | Microsoft Teams",
+                Title = "Glassmire, Kris | Microsoft Teams",
+                Url = "teams.microsoft.com"
+            },
+            new DTLogData()
+            {
+                Text = "Amaya Romero, Ricardo | Microsoft Teams",
+                Title = "Amaya Romero, Ricardo | Microsoft Teams",
+                Url = "teams.microsoft.com"
+            },
+            new DTLogData()
+            {
+                Text = "Calendar | Microsoft Teams",
+                Title = "Calendar | Microsoft Teams",
+                Url = "teams.microsoft.com"
+            },
+            new DTLogData()
+            {
+                Text = "Barrington, Alex | Microsoft Teams",
+                Title = "Barrington, Alex | Microsoft Teams",
+                Url = "teams.microsoft.com"
+            },
+            new DTLogData()
+            {
+                Text = "My Apps Dashboard | American College of Radiology",
+                Title = "My Apps Dashboard | American College of Radiology",
+                Url = "acr.okta.com"
+            },
+            new DTLogData()
+            {
+                Text = "AI-Lab Board - Agile Board - ACR-JIRA",
+                Title = "AI-Lab Board - Agile Board - ACR-JIRA",
+                Url = "acrjira.acr.org"
+            },
+            new DTLogData()
+            {
+                Text = "Inbox (130) - benoy@enfintechnologies.com",
+                Title = "Inbox (130) - benoy@enfintechnologies.com",
+                Url = "mail.google.com"
+            },
+            new DTLogData()
+            {
+                Text = "Citrix Workspace",
+                Title = "Citrix Workspace",
+                Url = "acradiology.cloud.com"
             }
         };
 
-        private DTLogData GetRandomLog()
+        private DTLogData GetRandomLog(bool app = false)
         {
             var rand = new Random(DateTime.Now.Second);
-            var randomIndex = rand.Next(0, WebsiteData.Count - 1);
-            return WebsiteData[randomIndex];
+            if (!app)
+            {
+                var randomIndex = rand.Next(0, WebsiteData.Count - 1);
+                return WebsiteData[randomIndex];
+            }
+            else
+            {
+                var randomIndex = rand.Next(0, AppData.Count - 1);
+                return AppData[randomIndex];
+            }
         }
 
         private void DataSender()
@@ -1416,36 +1584,13 @@ namespace DeskTime
                                     switch (data.App)
                                     {
                                         case "chrome":
-                                            {
-                                                var log = GetRandomLog();
-                                                data.Text = log.Text;
-                                                data.Title = log.Title;
-                                                data.Url = log.Url;
-                                                //data.Text = "ACRCode/acrconnect-ai-lab-service: This web service handles all the back end logic for AI Lab in maintaining the data and models";
-                                                //data.Title = data.Text;
-                                                //data.Url = "github.com";
-                                                break;
-                                            }
                                         case "firefox":
-                                            {
-                                                var log = GetRandomLog();
-                                                data.Text = log.Text;
-                                                data.Title = log.Title;
-                                                data.Url = log.Url;
-                                                //data.Text = "American College of Radiology";
-                                                //data.Title = data.Text;
-                                                //data.Url = "github.com";
-                                                break;
-                                            }
                                         case "msedge":
                                             {
                                                 var log = GetRandomLog();
                                                 data.Text = log.Text;
                                                 data.Title = log.Title;
-                                                data.Url = log.Url;
-                                                //data.Text = "Cloud Computing Services - Amazon Web Services (AWS)";
-                                                //data.Title = data.Text;
-                                                //data.Url = "aws.amazon.com";
+                                                data.Url = log.Url;                                          
                                                 break;
                                             }
                                         case "devenv":
@@ -1456,10 +1601,12 @@ namespace DeskTime
                                             }
                                         default:
                                             {
-                                                data.App = "Code";
-                                                data.Path = "C:\\Users\\Benoy\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe";
-                                                data.Text = "MoonshotCore - Visual Studio Code";
-                                                data.Title = data.Text;
+                                                var log = GetRandomLog(true);
+                                                data.App = log.App;
+                                                data.Text = log.Text;
+                                                data.Title = log.Title;
+                                                data.Url = log.Url;
+                                                data.Path = log.Path;                                                
                                                 break;
                                             }
                                     }
